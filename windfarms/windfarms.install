@@ -169,4 +169,34 @@ function windfarms_uninstall(){
     // Inform user of removal.
     $t = get_t();
     drupal_set_message($t('Wind Farms variables removed.')); 
+    
+    // Get all node IDs with windfarm content type.
+    $sql_query = 'SELECT nid ';
+    $sql_query .= 'FROM {node} ';
+    $sql_query .= 'WHERE {node}.type = :type ';
+    $result = db_query($sql_query, array(':type' => 'windfarm'));
+    
+    $nids = array();
+    foreach($result as $row){
+        $nids[] = $row->nid;
+    }
+    
+    // Delete all windfarm content.
+    node_delete_multiple($nids);
+    drupal_set_message($t('Wind Farms content removed.'));
+    
+    
+    // Remove all fields and field instances.
+    foreach(field_info_instances('node', 'windfarm') as $field_name => $instance){
+        field_delete_instance($instance);
+    }
+    drupal_set_message($t('Wind Farms field and field instances removed.'));
+    
+    // Delete the content type.
+    node_type_delete('windfarm');
+    drupal_set_message($t('Wind Farm Content Type removed.'));
+    
+    // Clean up deleted fields.
+    field_purge_batch(1000);
+    
 }
